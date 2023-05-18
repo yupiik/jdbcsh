@@ -1,0 +1,14 @@
+{
+  "connections": [
+    {
+      "name": "test-h2",
+      "url": "jdbc:h2:mem:test",
+      "username": "sa",
+      "password": ""
+    }
+  ],
+  "initCommands": [
+    "set-connection --name test-h2",
+    "set-table-options --transpose true"
+  ]
+}

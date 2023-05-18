@@ -1,0 +1,50 @@
+package io.yupiik.jdbcsh.service;
+
+import io.yupiik.fusion.cli.CliAwaiter;
+import io.yupiik.fusion.cli.internal.CliCommand;
+import io.yupiik.fusion.framework.api.configuration.Configuration;
+import io.yupiik.fusion.framework.api.main.Args;
+import io.yupiik.fusion.framework.api.scope.ApplicationScoped;
+
+import java.util.List;
+import java.util.Map;
+
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
+
+@ApplicationScoped
+public class CommandExecutor {
+    private final Map<String, CliCommand<? extends Runnable>> commands;
+    private final Configuration configuration;
+    private final CommandLineParser parser;
+    private CommandArgs currentArgs;
+
+    public CommandExecutor(final List<CliCommand<? extends Runnable>> allCommands, final Configuration configuration, final CommandLineParser parser) {
+        this.commands = allCommands == null ? null : allCommands.stream().collect(toMap(CliCommand::name, identity()));
+        this.configuration = configuration;
+        this.parser = parser;
+    }
+
+    public void execute(final String command) {
+        int space = command.indexOf(' ');
+        if (space < 0) {
+            space = command.length();
+        }
+
+        final var cmd = commands.get(command.substring(0, space));
+        final var args = parser.parse(cmd == null ? "statement " + command : command);
+        currentArgs = new CommandArgs(command, args); // for now we are not multi-threaded but could be a thread local or scoped instance
+        try {
+            CliAwaiter.of(new Args(args), configuration, commands).await();
+        } finally {
+            currentArgs = null;
+        }
+    }
+
+    public CommandArgs currentArgs() {
+        return currentArgs;
+    }
+
+    public record CommandArgs(String raw, List<String> args) {
+    }
+}
