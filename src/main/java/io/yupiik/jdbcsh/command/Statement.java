@@ -41,14 +41,16 @@ public class Statement implements Runnable {
         if (!state.hasConnection()) {
             throw new IllegalStateException("No connection set, ensure to call `set-connection --name $connection_name`.");
         }
+
         // todo: add tuning like fetch-size etc but args.args() is parsed so need to enhanced the input parsing to not loose the raw query
         final var sql = args.raw().startsWith("statement ") ? args.raw().substring("statement ".length()) : args.raw();
+        final var actualSql = state.findByAlias(sql).orElse(sql);
 
         final List<List<String>> rows;
         final var start = now();
         try (final var connectionHolder = state.connection();
              final var stmt = connectionHolder.connection().createStatement()) {
-            if (stmt.execute(sql)) {
+            if (stmt.execute(actualSql)) {
                 try (final var rset = stmt.getResultSet()) {
                     final var metaData = rset.getMetaData();
                     final var columnCount = metaData.getColumnCount();

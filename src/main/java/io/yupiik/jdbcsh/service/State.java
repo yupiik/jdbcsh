@@ -4,6 +4,7 @@ import io.yupiik.fusion.framework.api.scope.ApplicationScoped;
 import io.yupiik.fusion.json.JsonMapper;
 import io.yupiik.jdbcsh.command.error.CommandExecutionException;
 import io.yupiik.jdbcsh.configuration.JDBCConnection;
+import io.yupiik.jdbcsh.configuration.StatementAlias;
 import io.yupiik.jdbcsh.k8s.PortForward;
 import io.yupiik.jdbcsh.table.TableFormatter;
 
@@ -11,6 +12,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static java.util.Optional.ofNullable;
 
@@ -21,6 +25,7 @@ public class State {
     private JDBCConnection connection;
     private TableFormatter.TableOptions tableOptions = new TableFormatter.TableOptions(false, "-");
     private String prompt = "$database> ";
+    private List<StatementAlias> globalAliases = List.of();
 
     public State(final JsonMapper jsonMapper) {
         this.jsonMapper = jsonMapper;
@@ -33,6 +38,20 @@ public class State {
 
     public boolean hasConnection() {
         return connection != null;
+    }
+
+    public Optional<String> findByAlias(final String sql) {
+        return ofNullable(connection)
+                .map(JDBCConnection::aliases)
+                .flatMap(a -> findByAlias(sql, a))
+                .or(() -> findByAlias(sql, globalAliases));
+    }
+
+    private Optional<String> findByAlias(final String sql, final List<StatementAlias> a) {
+        return a.stream()
+                .filter(it -> Objects.equals(it.name(), sql))
+                .findFirst()
+                .map(StatementAlias::sql);
     }
 
     public CloseableConnection connection() {
@@ -112,6 +131,10 @@ public class State {
 
     public void setPrompt(final String prompt) {
         this.prompt = prompt;
+    }
+
+    public void setGlobalAliases(final List<StatementAlias> aliases) {
+        this.globalAliases = aliases;
     }
 
     public record CloseableConnection(Connection connection, AutoCloseable closeable) implements AutoCloseable {

@@ -61,6 +61,9 @@ public class LoadRc implements Runnable {
             if (conf.prompt() != null) {
                 state.setPrompt(conf.prompt());
             }
+            if (conf.aliases() != null) {
+                state.setGlobalAliases(conf.aliases());
+            }
         } catch (final IOException ioe) {
             throw new CommandExecutionException(ioe);
         }
