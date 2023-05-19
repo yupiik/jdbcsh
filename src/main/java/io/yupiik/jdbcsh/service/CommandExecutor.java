@@ -31,8 +31,9 @@ public class CommandExecutor {
             space = command.length();
         }
 
-        final var cmd = commands.get(command.substring(0, space));
-        final var args = parser.parse(cmd == null ? "statement " + command : command);
+        final var cmdName = command.substring(0, space);
+        final var cmd = commands.get(cmdName);
+        final var args = parser.parse(cmd == null && !"help".equalsIgnoreCase(cmdName) ? "statement " + command : command);
         currentArgs = new CommandArgs(command, args); // for now we are not multi-threaded but could be a thread local or scoped instance
         try {
             CliAwaiter.of(new Args(args), configuration, commands).await();

@@ -12,12 +12,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import static java.util.Optional.ofNullable;
+
 @ApplicationScoped
 public class State {
     private final JsonMapper jsonMapper;
 
     private JDBCConnection connection;
     private TableFormatter.TableOptions tableOptions = new TableFormatter.TableOptions(false, "-");
+    private String prompt = "$database> ";
 
     public State(final JsonMapper jsonMapper) {
         this.jsonMapper = jsonMapper;
@@ -100,6 +103,15 @@ public class State {
 
     public TableFormatter.TableOptions tableOptions() {
         return tableOptions;
+    }
+
+    public String getCurrentPrompt() {
+        return prompt
+                .replace("$database", connection == null ? "no-database" : ofNullable(connection.name()).orElse("database1"));
+    }
+
+    public void setPrompt(final String prompt) {
+        this.prompt = prompt;
     }
 
     public record CloseableConnection(Connection connection, AutoCloseable closeable) implements AutoCloseable {

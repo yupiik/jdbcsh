@@ -1,24 +1,22 @@
 package io.yupiik.jdbcsh.launcher;
 
+import io.yupiik.fusion.framework.api.RuntimeContainer;
 import io.yupiik.fusion.framework.api.lifecycle.Start;
 import io.yupiik.fusion.framework.api.main.Args;
 import io.yupiik.fusion.framework.api.scope.DefaultScoped;
 import io.yupiik.fusion.framework.build.api.event.OnEvent;
-import io.yupiik.fusion.json.JsonMapper;
-import io.yupiik.jdbcsh.configuration.Configuration;
+import io.yupiik.jdbcsh.command.LoadRc;
+import io.yupiik.jdbcsh.command.error.CommandExecutionException;
+import io.yupiik.jdbcsh.io.StdIO;
 import io.yupiik.jdbcsh.service.CommandExecutor;
-import io.yupiik.jdbcsh.service.ConnectionRegistry;
+import io.yupiik.jdbcsh.service.State;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Scanner;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-
-import static java.util.Optional.ofNullable;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
 
 @DefaultScoped
 public class CLI {
@@ -30,21 +28,22 @@ public class CLI {
 
     public void onStart(@OnEvent final Start start,
                         final Args args,
-                        final JsonMapper jsonMapper,
-                        final ConnectionRegistry registry) {
+                        final StdIO stdIO,
+                        final State state,
+                        final RuntimeContainer container) {
         boolean skipDefaultRc = false;
         if (args.args() != null) {
             skipDefaultRc = args.args().contains("-sdrc");
 
             final int conf = args.args().indexOf("-rc");
             if (conf >= 0) {
-                initRC(Path.of(args.args().get(conf + 1)), jsonMapper, registry);
+                initRC(Path.of(args.args().get(conf + 1)), container);
             }
 
             final int commands = args.args().indexOf("-c");
             if (commands >= 0) {
                 if (!skipDefaultRc) {
-                    initDefaultRC(jsonMapper, registry);
+                    initDefaultRC(container);
                     skipDefaultRc = true; // already done
                 }
                 execute(args.args().get(commands + 1));
@@ -56,19 +55,37 @@ public class CLI {
             }
         }
         if (!skipDefaultRc) {
-            initDefaultRC(jsonMapper, registry);
+            initDefaultRC(container);
         }
 
-        startInteractive();
+        startInteractive(state, stdIO);
     }
 
-    private void startInteractive() {
-        // todo: while + prompt + try/catch(CommandExecutionException) to not quit on error
-        System.out.println("TBD");
+    private void startInteractive(final State state, final StdIO stdIO) {
+        // final var console = System.console(); // does not always work in terminals (if not a tty)
+        final var scanner = new Scanner(stdIO.stdin()); // don't close! done by caller if needed (jvm most of the time)
+        while (true) {
+            try {
+                final var prompt = state.getCurrentPrompt();
+                stdIO.stdout().print(prompt);
+                final var command = scanner.nextLine();
+                final var stripped = command.strip();
+                if ("exit".equalsIgnoreCase(stripped) || "quit".equalsIgnoreCase(stripped)) {
+                    return;
+                }
+                executor.execute(command);
+            } catch (final CommandExecutionException e) {
+                stdIO.stderr().println("Command execution failed:");
+                e.getCause().printStackTrace(stdIO.stderr());
+            } catch (final RuntimeException re) {
+                stdIO.stderr().println("Command execution failed:");
+                re.printStackTrace(stdIO.stderr());
+            }
+        }
     }
 
-    private void initDefaultRC(final JsonMapper jsonMapper, final ConnectionRegistry registry) {
-        initRC(Path.of(System.getProperty("user.home", ".")).resolve(".jdbcshrc"), jsonMapper, registry);
+    private void initDefaultRC(final RuntimeContainer container) {
+        initRC(Path.of(System.getProperty("user.home", ".")).resolve(".jdbcshrc"), container);
     }
 
     private void execute(final String commands) {
@@ -92,28 +109,15 @@ public class CLI {
                 .forEach(executor::execute);
     }
 
-    private void initRC(final Path rc, final JsonMapper jsonMapper, final ConnectionRegistry registry) {
+    private void initRC(final Path rc, final RuntimeContainer container) {
         if (Files.exists(rc)) {
-            loadFromJsonConf(jsonMapper, registry, rc);
+            loadFromJsonConf(container, rc);
         }
     }
 
-    private void loadFromJsonConf(final JsonMapper jsonMapper, final ConnectionRegistry registry, final Path rc) {
-        try {
-            final var conf = jsonMapper.fromString(Configuration.class, Files.readString(rc));
-            if (conf.connections() != null) {
-                final var counter = new AtomicInteger();
-                registry.getConnections().putAll(conf.connections().stream()
-                        .collect(toMap(
-                                it -> ofNullable(it.name())
-                                        .orElseGet(() -> "connection-" + counter.incrementAndGet()),
-                                identity())));
-            }
-            if (conf.initCommands() != null) {
-                conf.initCommands().forEach(executor::execute);
-            }
-        } catch (final IOException e) {
-            throw new IllegalStateException(e);
+    private void loadFromJsonConf(final RuntimeContainer container, final Path rc) {
+        try (final var instance = container.lookup(LoadRc.class)) {
+            instance.instance().doLoad(rc);
         }
     }
 }

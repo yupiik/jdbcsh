@@ -22,7 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Instant.now;
 import static java.util.stream.Collectors.joining;
 
-@Command(name = "statement", description = "Execute a statement, it is the implicit command.")
+@Command(name = "statement", description = "Execute a statement, it is the implicit command and takes the full args as the statement to execute.")
 public class Statement implements Runnable {
     private final Conf conf;
     private final CommandExecutor.CommandArgs args;
