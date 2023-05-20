@@ -16,6 +16,7 @@
 package io.yupiik.jdbcsh.service;
 
 import io.yupiik.fusion.framework.api.scope.ApplicationScoped;
+import io.yupiik.fusion.framework.build.api.lifecycle.Destroy;
 import io.yupiik.fusion.json.JsonMapper;
 import io.yupiik.jdbcsh.command.error.CommandExecutionException;
 import io.yupiik.jdbcsh.configuration.JDBCConnection;
@@ -30,8 +31,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import static java.util.Optional.ofNullable;
+import static java.util.logging.Level.WARNING;
 
 @ApplicationScoped
 public class State {
@@ -41,9 +44,21 @@ public class State {
     private TableFormatter.TableOptions tableOptions = new TableFormatter.TableOptions(false, "-");
     private String prompt = "$database> ";
     private List<StatementAlias> globalAliases = List.of();
+    private CloseableConnection lastConnection;
 
     public State(final JsonMapper jsonMapper) {
         this.jsonMapper = jsonMapper;
+    }
+
+    @Destroy
+    protected void destroy() {
+        if (lastConnection != null) {
+            try {
+                lastConnection.closeable().close();
+            } catch (final Exception e) {
+                Logger.getLogger(getClass().getName()).log(WARNING, e, () -> "Can't close last connection properly: " + e.getMessage());
+            }
+        }
     }
 
     // todo: keep track?
@@ -70,6 +85,18 @@ public class State {
     }
 
     public CloseableConnection connection() {
+        if (lastConnection != null) {
+            return new CloseableConnection(lastConnection.connection(), () -> {});
+        }
+
+        final var freshConnection = doCreateConnection();
+        if (connection.persistent()) {
+            lastConnection = freshConnection;
+        }
+        return freshConnection;
+    }
+
+    private CloseableConnection doCreateConnection() {
         if (connection.k8s() != null) {
             final var portForward = new PortForward(
                     connection.k8s(),
