@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2023 - Yupiik SAS - https://www.yupiik.com
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -8,10 +25,13 @@
   <artifactId>jdbcsh</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <name>JDBCsh</name>
+  <description>A JDBC based CLI supporting some advanced features like kubernetes tunneling.</description>
 
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
+
+    <minisite.serverId>github.com</minisite.serverId>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -55,6 +75,13 @@
     </dependency>
 
     <dependency>
+      <groupId>io.yupiik.logging</groupId>
+      <artifactId>yupiik-logging-jul</artifactId>
+      <version>1.0.7</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>5.10.0-M1</version>
@@ -78,12 +105,344 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.2.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>3.0.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <trimStackTrace>false</trimStackTrace>
+          <systemPropertyVariables>
+            <java.util.logging.manager>io.yupiik.logging.jul.YupiikLogManager</java.util.logging.manager>
+            <java.net.preferIPv4Stack>true</java.net.preferIPv4Stack>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <excludes>
+            <exclude>**/build/minisite/*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>3.0.0-M1</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <releaseProfiles>release</releaseProfiles>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.11.0</version>
         <configuration>
           <parameters>true</parameters>
+          <source>17</source>
+          <target>17</target>
+          <release>17</release>
+          <encoding>UTF-8</encoding>
         </configuration>
+      </plugin>
+      <plugin><!--  mvn ossindex:audit -->
+        <groupId>org.sonatype.ossindex.maven</groupId>
+        <artifactId>ossindex-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>audit-dependencies</id>
+            <phase />
+            <goals>
+              <goal>audit</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scope>compile,runtime</scope>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.9.1</version>
+      </plugin>
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>4.2</version>
+        <executions>
+          <execution>
+            <id>check-license</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <inherited>false</inherited>
+        <configuration>
+          <aggregate>true</aggregate>
+          <mapping>
+            <adoc>DOUBLESLASH_STYLE</adoc>
+          </mapping>
+          <licenseSets>
+            <licenseSet>
+              <inlineHeader><![CDATA[Copyright (c) ${project.inceptionYear} - ${project.organization.name} - ${project.organization.url}
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+]]></inlineHeader>
+              <useDefaultExcludes>true</useDefaultExcludes>
+              <includes>
+                <include>**/*.properties</include>
+                <include>**/*.java</include>
+                <include>**/*.xml</include>
+                <include>**/*.yaml</include>
+              </includes>
+              <excludes>
+                <exclude>LICENSE</exclude>
+                <exclude>**/*.adoc</exclude>
+                <exclude>**/*.idea</exclude>
+                <exclude>**/target/**</exclude>
+                <exclude>**/generated/**</exclude>
+                <exclude>**/main/minisite/**</exclude>
+                <exclude>**/file</exclude>
+                <exclude>**/.m2/**</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
+        </configuration>
+      </plugin>
+
+      <!-- mvn [compile] yupiik-tools:serve-minisite -e -->
+      <plugin>
+        <groupId>io.yupiik.maven</groupId>
+        <artifactId>yupiik-tools-maven-plugin</artifactId>
+        <version>1.1.5-SNAPSHOT</version>
+        <configuration>
+          <usePluginAsParentClassLoader>true</usePluginAsParentClassLoader>
+          <siteBase>/jdbcsh/</siteBase>
+          <attributes>
+            <partialsdir>${project.basedir}/src/main/minisite/content/_partials</partialsdir>
+          </attributes>
+          <preActions>
+            <preAction>
+              <type>jsonschema2adoc</type>
+              <configuration>
+                <root>io.yupiik.jdbcsh.configuration.Configuration</root>
+                <schema>${project.build.outputDirectory}/META-INF/fusion/json/schemas.json</schema>
+                <output>${project.basedir}/src/main/minisite/content/_partials/generated/configuration.json.adoc</output>
+              </configuration>
+            </preAction>
+            <preAction>
+              <type>io.yupiik.jdbcsh.build.minisite.Configuration</type>
+            </preAction>
+            <preAction>
+              <type>io.yupiik.jdbcsh.build.minisite.Commands</type>
+            </preAction>
+          </preActions>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>io.yupiik.uship</groupId>
+            <artifactId>backbone-johnzon</artifactId>
+            <version>1.0.16</version>
+            <type>pom</type>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile> <!--  by default we want changes we do in the project to be reflected in the doc even without building it  -->
+      <id>generate-content-but-not-site</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.yupiik.maven</groupId>
+            <artifactId>yupiik-tools-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>buildDoc</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>minisite</goal>
+                </goals>
+                <configuration>
+                  <skipRendering>true</skipRendering>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile> <!--  mvn clean package -Pgh-pages  -->
+      <id>gh-pages</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.yupiik.maven</groupId>
+            <artifactId>yupiik-tools-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>gh-pages</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>minisite</goal>
+                </goals>
+                <configuration>
+                  <git>
+                    <ignore>false</ignore>
+                    <noJekyll>true</noJekyll>
+                    <serverId>${minisite.serverId}</serverId>
+                    <branch>refs/heads/gh-pages</branch>
+                    <url>https://github.com/yupiik/fusion.git</url>
+                  </git>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>release</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.2.0</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <source>17</source>
+              <doclint>none</doclint>
+              <encoding>UTF-8</encoding>
+              <failOnError>false</failOnError>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://github.com/yupiik/fusion/blob/master/LICENSE</url>
+      <distribution>may be downloaded from the Maven repository</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Romain Manni-Bucau</name>
+      <id>rmannibucau</id>
+      <roles>
+        <role>Contributor</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Francois Papon</name>
+      <id>fpapon</id>
+      <roles>
+        <role>Contributor</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/yupiik/jdbcsh.git</connection>
+    <developerConnection>scm:git:https://github.com/yupiik/jdbcsh.git</developerConnection>
+    <url>https://github.com/yupiik/jdbcsh.git</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <organization>
+    <name>Yupiik SAS</name>
+    <url>https://www.yupiik.com</url>
+  </organization>
+
+  <inceptionYear>2023</inceptionYear>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
 </project>

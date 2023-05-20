@@ -1,0 +1,22 @@
+= Getting Started
+:minisite-index: 100
+:minisite-index-title: Getting Started
+:minisite-index-description: Entry point.
+:minisite-index-icon: play
+
+JDBCsh is a command line application (CLI) which uses Java DataBase Connectivity (JDBC) abstraction to execute commands against databases.
+
+== Concepts
+
+JDBCsh is built against:
+
+* a CLI (so commands): see xref:generated/commands/index.adoc[commands] page,
+* a configuration file listing database connections (when not defined thanks a command): see xref:configuration.adoc[configuration] page.
+
+== Specific CLI arguments
+
+The CLI supports a few arguments when launched which configures its behavior independently of the command used.
+Some are listed and related to the xref:configuration.adoc[configuration] but some others are global, here they are:
+
+* `-ni` (not interactive): start and stop without entering interactive mode (often used with `-c`),
+* `-c $someCommand`: command to launch at startup (after configuration/rc ones if set).

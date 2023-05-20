@@ -1,0 +1,24 @@
+= Configuration
+:minisite-index: 200
+:minisite-index-title: Configuration
+:minisite-index-description: How to configure its databases persistently.
+:minisite-index-icon: list
+
+
+Configuration can be set as a JSON file using `-rc $pathToJsonFile`.
+
+== JSON
+
+IMPORTANT: don't forget to add `-rc $pathToJsonConfiguration` when launching the application or set it in `~/.jdbcrcsh`.
+If you don't want any default initializing even if the file exists add `-sdrc` argument when launching the CLI (Skip Default RC).
+
+=== Schema
+
+IMPORTANT: JSON documentation is the same than the other one so read description part for details.
+
+TIP: you can inject in your configuration file the root attribute `"$schema": "https://www.yupiik.io/jdbcsh/configuration.schema.json"` to get completion if you editor supports it.
+
+[source,json]
+----
+include::{partialsdir}/generated/configuration.schema.json[]
+----
