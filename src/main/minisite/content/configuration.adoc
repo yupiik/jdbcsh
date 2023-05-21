@@ -12,6 +12,84 @@ Configuration can be set as a JSON file using `-rc $pathToJsonFile`.
 IMPORTANT: don't forget to add `-rc $pathToJsonConfiguration` when launching the application or set it in `~/.jdbcrcsh`.
 If you don't want any default initializing even if the file exists add `-sdrc` argument when launching the CLI (Skip Default RC).
 
+TIP: JSON does not define comments but you can use fake attributes to do so, a common pattern is to prefix them with `//`, ex: `{"//comment1":"...."}`.
+
+=== Sample configurations
+
+==== Direct database
+
+Here is a definition of an oracle connection directly accessible:
+
+[source,json]
+.Simple JDBC connection definition
+----
+{
+  "connections": [
+    {
+      "name": "my-connection",
+      "username": "xxxx",
+      "password": "xxxx"
+      "url": "jdbc:....",
+    }
+  ]
+}
+----
+
+IMPORTANT: as for any connection definition, ensure the driver is either built-in or provided in the application classpath.
+
+==== Kubernetes port-forwarding database
+
+[source,json]
+.Kubernetes JDBC connection definition
+----
+{
+  "connections": [
+    {
+      <1>
+      "name": "my-connection",
+      "username": "xxxx",
+      "password": "xxxx",
+      "url": "jdbc:....", <2>
+      <3>
+      "k8s": {
+        "token": "...",
+        "certificates": "...",
+        "api": "...",
+        "containerPort": 5432,
+        "pod": "my-database-0"
+      }
+    }
+  ]
+}
+----
+<.> Standard connection definition,
+<.> URL with placeholders for the (k8s) port forwarding,
+<.> Kubernetes client definition.
+
+TIP: this assumes the database pod is always `my-database-0`, while this is generally the case for `StatefulSet` it can be easier to use `podPrefix` or `service` configuration (see xref:configuration.adoc[configuration] page for more details).
+
+The same using a `kubeconfig` (ie a JSON or "light" YAML cluster configuration with a `current-context`) would look like:
+
+[source,json]
+.Kubeconfig connection
+----
+{
+  "connections": [
+    {
+      "name": "my-connection",
+      "username": "xxxx",
+      "password": "xxxx",
+      "url": "jdbc:....",
+      "k8s": {
+        "kubeconfig": "/path/to/kube.json",
+        "containerPort": 5432,
+        "pod": "my-database-0"
+      }
+    }
+  ]
+}
+----
+
 === Schema
 
 IMPORTANT: JSON documentation is the same than the other one so read description part for details.

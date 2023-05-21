@@ -63,8 +63,8 @@ class PortForwardTest {
             final var k8sApi = "http://localhost:" + mock.getAddress().getPort();
             final var forward = new PortForward(
                     new KubernetesPortForwardConfiguration(
-                            null, null, null, "",
-                            k8sApi,
+                            null, null, null, null, "",
+                            false, k8sApi,
                             1234,
                             "localhost", 0,
                             pod, podPrefix, service, "ns", "app=junit"),
