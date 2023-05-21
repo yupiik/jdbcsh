@@ -61,9 +61,17 @@ public class State {
         }
     }
 
-    // todo: keep track?
     public void setConnection(final JDBCConnection connection) {
         this.connection = connection;
+        if (this.lastConnection != null) {
+            try {
+                this.lastConnection.closeable().close();
+            } catch (final Exception e) {
+                Logger.getLogger(getClass().getName()).log(WARNING, e, () -> "Error closing last connection properly: " + e.getMessage());
+            } finally {
+                this.lastConnection = null;
+            }
+        }
     }
 
     public boolean hasConnection() {
@@ -86,7 +94,8 @@ public class State {
 
     public CloseableConnection connection() {
         if (lastConnection != null) {
-            return new CloseableConnection(lastConnection.connection(), () -> {});
+            return new CloseableConnection(lastConnection.connection(), () -> {
+            });
         }
 
         final var freshConnection = doCreateConnection();
