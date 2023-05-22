@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpRequest;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,9 @@ public class PortForward {
     // todo: enable reading a kubeconfig?
     protected KubernetesClient newK8SClient() {
         return new KubernetesClient(new KubernetesClientConfiguration()
+                .setKubeconfig(configuration.kubeconfig() == null ? null : Path.of(configuration.kubeconfig().startsWith("~") ?
+                        System.getProperty("user.home", ".") + configuration.kubeconfig().substring(1) :
+                        configuration.kubeconfig()))
                 .setSkipTls(configuration.skipTls())
                 .setToken(ofNullable(configuration.token())
                         .orElseGet(() -> System.getProperty("java.io.tmpdir", "/tmp") + "missing_jdbcsh_" + UUID.randomUUID() + "_jdbcsh"))

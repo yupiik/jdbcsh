@@ -21,7 +21,7 @@ import io.yupiik.fusion.framework.build.api.json.JsonModel;
 @JsonModel
 public record KubernetesPortForwardConfiguration(
         // todo: add kubeconfig context/user/cluster selection?
-        @Property(documentation = "Kubeconfig to use to fill kubernetes configuration automatically (certificates, token or certificate authentication). Note that the parser is not a generic Yaml parser but a light one supporting only inline values (not multiline strings). The logic is to parse the file as a plain JSON file if extension is JSON, else use the light YAML parser. As of now it uses default cluster/context/user.") String kubeconfig,
+        @Property(documentation = "Kubeconfig to use to fill kubernetes configuration automatically (certificates, token or certificate authentication). Note that the parser is not a generic Yaml parser but a light one supporting only inline values (not multiline strings). The logic is to parse the file as a plain JSON file if extension is JSON, else use the light YAML parser. As of now it uses default cluster/context/user. `~` is supported to represent home directory.") String kubeconfig,
         @Property(documentation = "Token (if not refreshed and not using a certificate as authentication.). Ignored if `kubeconfig` is used.") String token,
         @Property(documentation = "If not using a token the SSL private key for cluster authentication. Ignored if `kubeconfig` is used.") String privateKey,
         @Property(documentation = "If not using a token the SSL private key certificate for cluster authentication. Ignored if `kubeconfig` is used.") String privateKeyCertificate,

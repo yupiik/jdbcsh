@@ -24,6 +24,7 @@ import java.util.List;
 public record JDBCConnection(
         @Property(documentation = "Connection name.") String name,
         @Property(documentation = "Kubernetes connection if needed (to use port forward).") KubernetesPortForwardConfiguration k8s,
+        @Property(documentation = "Driver to force loading to be available for the runtime.") String driver,
         @Property(documentation = "JDBC URL. If you configure kubernetes (`k8s`) you can use `$host:$port` to be replaced by the proxy one if not hardcoded.") String url,
         @Property(documentation = "Database username.") String username,
         @Property(documentation = "Database password.") String password,
