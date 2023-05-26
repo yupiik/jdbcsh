@@ -35,7 +35,7 @@
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <fusion.version>1.0.3-SNAPSHOT</fusion.version>
+    <fusion.version>1.0.3</fusion.version>
   </properties>
 
   <dependencies>
