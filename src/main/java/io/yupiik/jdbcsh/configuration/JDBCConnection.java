@@ -28,6 +28,7 @@ public record JDBCConnection(
         @Property(documentation = "JDBC URL. If you configure kubernetes (`k8s`) you can use `$host:$port` to be replaced by the proxy one if not hardcoded.") String url,
         @Property(documentation = "Database username.") String username,
         @Property(documentation = "Database password.") String password,
+        @Property(documentation = "Schema.") String schema,
         @Property(documentation = "Query/statement aliases, enables to bind a name to a SQL statement (useful when long). These are specific for this database.") List<StatementAlias> aliases,
         @Property(documentation = "Should this connection be scoped to a single statement or can it be reused accross multiple statements (note that when switching of connection it will be closed anyway).") boolean persistent
 ) {

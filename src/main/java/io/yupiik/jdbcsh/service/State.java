@@ -120,6 +120,9 @@ public class State {
                                     .replace("$host", forwarding.proxy().localAddress().getHostName())
                                     .replace("$port", Integer.toString(forwarding.proxy().localAddress().getPort())),
                             connection.username(), connection.password());
+                    if (connection.schema() != null) {
+                        jdbc.setSchema(connection.schema());
+                    }
                 } catch (final IOException e) {
                     try {
                         forwarding.close();
@@ -161,6 +164,9 @@ public class State {
         // standard local connection
         try {
             final var jdbc = DriverManager.getConnection(connection.url(), connection.username(), connection.password());
+            if (connection.schema() != null) {
+                jdbc.setSchema(connection.schema());
+            }
             return new CloseableConnection(jdbc, jdbc);
         } catch (final SQLException e) {
             throw new CommandExecutionException(e);
