@@ -1,0 +1,32 @@
+= JdbcSh
+
+image::https://github.com/yupiik/jdbcsh/actions/workflows/maven.yml/badge.svg?branch=master[Github CI,float="right"]
+
+== What is JdbcSh?
+
+== Build
+
+Pre-requisite: Maven >= 3.8 and Java >= 21.
+
+== Release
+
+Build and publish to central:
+
+[source, bash]
+----
+mvn release:prepare release:perform
+----
+
+Publish documentation on GitHub page:
+
+[source, bash]
+----
+git checkout -b <release-tag> <release-tag> && mvn clean package -Pgh-pages
+----
+
+Pubish release on GitHub by running in https://github.com/yupiik/yupiik.github.io project:
+
+[source, bash]
+----
+mvn yupiik-tools:synchronize-github-releases@jdbcsh -Psynchronize-github-releases
+----
