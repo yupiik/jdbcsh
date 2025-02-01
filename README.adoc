@@ -4,6 +4,15 @@ image::https://github.com/yupiik/jdbcsh/actions/workflows/maven.yml/badge.svg?br
 
 == What is JdbcSh?
 
+JDBCsh is a command line application (CLI) which uses Java DataBase Connectivity (JDBC) abstraction to execute commands against databases.
+
+== Concepts
+
+JDBCsh is built against:
+
+* a CLI (so commands)
+* a configuration file listing database connections (when not defined thanks a command)
+
 == Build
 
 Pre-requisite: Maven >= 3.8 and Java >= 21.
