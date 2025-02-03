@@ -34,7 +34,7 @@
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <fusion.version>1.0.22</fusion.version>
+    <fusion.version>1.0.23</fusion.version>
     <yupiik-logging.version>1.0.8</yupiik-logging.version>
   </properties>
 
