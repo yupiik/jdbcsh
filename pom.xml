@@ -28,7 +28,7 @@
   <description>A JDBC based CLI supporting some advanced features like kubernetes tunneling.</description>
 
   <properties>
-    <maven.compiler>21</maven.compiler>
+    <maven.compiler>17</maven.compiler>
 
     <minisite.serverId>github.com</minisite.serverId>
 
